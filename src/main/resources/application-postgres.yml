@@ -1,0 +1,9 @@
+# Ativar com: mvn spring-boot:run -Dspring-boot.run.profiles=postgres
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/frotaif
+    username: frotaif
+    password: frotaif
+  h2:
+    console:
+      enabled: false

@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: frotaif
+      POSTGRES_USER: frotaif
+      POSTGRES_PASSWORD: frotaif
+    ports:
+      - "5432:5432"
