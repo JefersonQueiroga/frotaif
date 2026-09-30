@@ -24,7 +24,6 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 120)
     private String email;
 
-    // Hash BCrypt — passa a ser usado na aula de Spring Security.
     // @JsonIgnore é provisório: na aula de DTO a entidade deixa de ser exposta na API.
     @JsonIgnore
     private String senha;

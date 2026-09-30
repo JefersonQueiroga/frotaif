@@ -3,3 +3,11 @@ target/
 *.iml
 .vscode/
 .DS_Store
+
+# IA (Claude)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
+# Documentação interna
+docs/
