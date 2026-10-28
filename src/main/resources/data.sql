@@ -31,3 +31,9 @@ INSERT INTO viagens (solicitante_id, destino, finalidade, saida, retorno_previst
 -- Viagem já APROVADA (Cronos + Diego) no mesmo dia da viagem 1, para demonstrar os conflitos RN06/RN07
 INSERT INTO viagens (solicitante_id, destino, finalidade, saida, retorno_previsto, qtd_passageiros, status, veiculo_id, motorista_id) VALUES
   (3, 'Natal', 'Entrega de documentos', CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY + INTERVAL '8' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY + INTERVAL '14' HOUR, 2, 'APROVADA', 1, 1);
+
+-- Abastecimentos anteriores (km abaixo da quilometragem atual de cada veículo)
+INSERT INTO abastecimentos (veiculo_id, data, litros, valor_total, km_no_abastecimento, posto) VALUES
+  (1, CURRENT_DATE - INTERVAL '20' DAY, 40.00,  248.00, 34850,  'Posto Central'),
+  (1, CURRENT_DATE - INTERVAL '6' DAY,  35.50,  223.65, 35180,  'Posto Central'),
+  (3, CURRENT_DATE - INTERVAL '12' DAY, 70.00,  441.00, 102100, 'Posto BR 405');
