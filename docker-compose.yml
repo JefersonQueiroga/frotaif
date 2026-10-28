@@ -6,4 +6,21 @@ services:
       POSTGRES_USER: frotaif
       POSTGRES_PASSWORD: frotaif
     ports:
-      - "5432:5432"
+      - "5433:5432"   # 5433 no host para não conflitar com um Postgres local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frotaif -d frotaif"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy   # só sobe depois que o banco aceitar conexões
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      # Dentro da rede do compose, o banco é acessado pelo nome do serviço
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/frotaif
+    ports:
+      - "8080:8080"

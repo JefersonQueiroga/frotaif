@@ -11,13 +11,15 @@ import java.util.List;
 
 public interface ViagemRepository extends JpaRepository<Viagem, Long> {
 
-    // RF09 — filtros opcionais: parâmetro nulo = filtro ignorado
+    // RF09 — filtros opcionais: parâmetro nulo = filtro ignorado.
+    // O cast nas datas é necessário no PostgreSQL: o driver envia data/hora sem tipo,
+    // e em ":inicio is null" o banco não consegue descobrir qual é ("could not determine data type").
     @Query("""
             select v from Viagem v
             where (:status is null or v.status = :status)
               and (:solicitanteId is null or v.solicitante.id = :solicitanteId)
-              and (:inicio is null or v.saida >= :inicio)
-              and (:fim is null or v.saida < :fim)
+              and (cast(:inicio as LocalDateTime) is null or v.saida >= :inicio)
+              and (cast(:fim as LocalDateTime) is null or v.saida < :fim)
             order by v.saida
             """)
     List<Viagem> filtrar(StatusViagem status, Long solicitanteId, LocalDateTime inicio, LocalDateTime fim);
