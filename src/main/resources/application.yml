@@ -20,6 +20,11 @@ spring:
   sql:
     init:
       mode: always
+  # Mostra a mensagem das exceções no corpo do erro (até termos o @RestControllerAdvice em t1-dto)
+  web:
+    error:
+      include-message: always
+      include-stacktrace: never
 
 # Parâmetros de negócio (RN04) — lidos via @ConfigurationProperties
 frota:
