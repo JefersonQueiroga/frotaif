@@ -51,4 +51,24 @@ public class ViagemController {
     public Viagem rejeitar(@PathVariable Long id, @RequestBody Viagem dados) {
         return viagemService.rejeitar(id, dados);
     }
+
+    // X-Usuario-Id simula o usuário logado até a aula de Spring Security (t3)
+    @PatchMapping("/{id}/iniciar")
+    public Viagem iniciar(@PathVariable Long id, @RequestHeader("X-Usuario-Id") Long usuarioId) {
+        return viagemService.iniciar(id, usuarioId);
+    }
+
+    // Corpo: {"kmFinal": 35400}
+    @PatchMapping("/{id}/concluir")
+    public Viagem concluir(@PathVariable Long id, @RequestHeader("X-Usuario-Id") Long usuarioId,
+                           @RequestBody Viagem dados) {
+        return viagemService.concluir(id, usuarioId, dados);
+    }
+
+    // Corpo: {"motivo": "..."}
+    @PatchMapping("/{id}/cancelar")
+    public Viagem cancelar(@PathVariable Long id, @RequestHeader("X-Usuario-Id") Long usuarioId,
+                           @RequestBody Viagem dados) {
+        return viagemService.cancelar(id, usuarioId, dados);
+    }
 }

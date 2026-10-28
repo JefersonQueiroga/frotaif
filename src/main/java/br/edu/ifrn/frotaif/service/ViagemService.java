@@ -1,6 +1,7 @@
 package br.edu.ifrn.frotaif.service;
 
 import br.edu.ifrn.frotaif.config.ViagemProperties;
+import br.edu.ifrn.frotaif.exception.AcessoNegadoException;
 import br.edu.ifrn.frotaif.exception.ConflitoException;
 import br.edu.ifrn.frotaif.exception.RecursoNaoEncontradoException;
 import br.edu.ifrn.frotaif.exception.RegraNegocioException;
@@ -8,6 +9,7 @@ import br.edu.ifrn.frotaif.model.Motorista;
 import br.edu.ifrn.frotaif.model.Usuario;
 import br.edu.ifrn.frotaif.model.Veiculo;
 import br.edu.ifrn.frotaif.model.Viagem;
+import br.edu.ifrn.frotaif.model.enums.Papel;
 import br.edu.ifrn.frotaif.model.enums.StatusVeiculo;
 import br.edu.ifrn.frotaif.model.enums.StatusViagem;
 import br.edu.ifrn.frotaif.model.enums.TipoVeiculo;
@@ -62,9 +64,7 @@ public class ViagemService {
 
     @Transactional
     public Viagem solicitar(Viagem viagem) {
-        Usuario solicitante = usuarioRepository.findById(viagem.getSolicitante().getId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException(
-                        "Usuário " + viagem.getSolicitante().getId() + " não encontrado"));
+        Usuario solicitante = buscarUsuario(viagem.getSolicitante().getId());
         if (!solicitante.isAtivo()) {
             throw new RegraNegocioException("Usuário inativo não pode solicitar viagens");
         }
@@ -94,10 +94,7 @@ public class ViagemService {
     @Transactional
     public Viagem aprovar(Long id, Viagem dados) {
         Viagem viagem = buscarPorId(id);
-        if (viagem.getStatus() != StatusViagem.SOLICITADA) {
-            throw new RegraNegocioException("Só é possível aprovar uma viagem SOLICITADA (status atual: "
-                    + viagem.getStatus() + ")");
-        }
+        validarTransicao(viagem, StatusViagem.APROVADA);
         if (dados.getVeiculo() == null || dados.getVeiculo().getId() == null
                 || dados.getMotorista() == null || dados.getMotorista().getId() == null) {
             throw new RegraNegocioException("Informe o veículo e o motorista da viagem");
@@ -120,16 +117,100 @@ public class ViagemService {
     @Transactional
     public Viagem rejeitar(Long id, Viagem dados) {
         Viagem viagem = buscarPorId(id);
-        if (viagem.getStatus() != StatusViagem.SOLICITADA) {
-            throw new RegraNegocioException("Só é possível rejeitar uma viagem SOLICITADA (status atual: "
-                    + viagem.getStatus() + ")");
-        }
+        validarTransicao(viagem, StatusViagem.REJEITADA);
         if (dados.getMotivo() == null || dados.getMotivo().isBlank()) {
             throw new RegraNegocioException("Informe o motivo da rejeição");
         }
         viagem.setMotivo(dados.getMotivo());
         viagem.setStatus(StatusViagem.REJEITADA);
         return viagem;
+    }
+
+    // usuarioId: quem está agindo (header X-Usuario-Id até a aula de Security)
+    @Transactional
+    public Viagem iniciar(Long id, Long usuarioId) {
+        Viagem viagem = buscarPorId(id);
+        verificarMotoristaAlocado(viagem, usuarioId); // RN09
+        validarTransicao(viagem, StatusViagem.EM_ANDAMENTO);
+
+        Veiculo veiculo = viagem.getVeiculo();
+        if (veiculo.getStatus() != StatusVeiculo.DISPONIVEL) {
+            throw new ConflitoException("O veículo " + veiculo.getPlaca() + " não está disponível (status: "
+                    + veiculo.getStatus() + ")");
+        }
+        validarCnh(viagem, viagem.getMotorista(), veiculo); // RN08 — verificada de novo ao iniciar
+
+        // RN10 — km inicial vem do veículo; veículo sai para a viagem
+        viagem.setKmInicial(veiculo.getQuilometragemAtual());
+        veiculo.setStatus(StatusVeiculo.EM_VIAGEM);
+        viagem.setStatus(StatusViagem.EM_ANDAMENTO);
+        return viagem; // dirty checking grava viagem E veículo na mesma transação
+    }
+
+    @Transactional
+    public Viagem concluir(Long id, Long usuarioId, Viagem dados) {
+        Viagem viagem = buscarPorId(id);
+        verificarMotoristaAlocado(viagem, usuarioId); // RN09
+        validarTransicao(viagem, StatusViagem.CONCLUIDA);
+
+        // RN10 — km final maior que o inicial; atualiza o veículo e o libera
+        Long kmFinal = dados.getKmFinal();
+        if (kmFinal == null || kmFinal <= viagem.getKmInicial()) {
+            throw new RegraNegocioException("O km final deve ser maior que o km inicial (" + viagem.getKmInicial() + ")");
+        }
+        Veiculo veiculo = viagem.getVeiculo();
+        veiculo.setQuilometragemAtual(kmFinal);
+        veiculo.setStatus(StatusVeiculo.DISPONIVEL);
+
+        viagem.setKmFinal(kmFinal);
+        viagem.setStatus(StatusViagem.CONCLUIDA);
+        return viagem;
+    }
+
+    @Transactional
+    public Viagem cancelar(Long id, Long usuarioId, Viagem dados) {
+        Viagem viagem = buscarPorId(id);
+        Usuario usuario = buscarUsuario(usuarioId);
+
+        // RN14 — o gestor cancela qualquer viagem; os demais, só as próprias
+        boolean gestor = usuario.getPapel() == Papel.GESTOR;
+        boolean solicitante = viagem.getSolicitante().getId().equals(usuario.getId());
+        if (!gestor && !solicitante) {
+            throw new AcessoNegadoException("Só o solicitante ou um gestor pode cancelar esta viagem");
+        }
+        // RN14 — apenas enquanto SOLICITADA ou APROVADA
+        validarTransicao(viagem, StatusViagem.CANCELADA);
+
+        if (dados.getMotivo() == null || dados.getMotivo().isBlank()) {
+            throw new RegraNegocioException("Informe o motivo do cancelamento");
+        }
+        viagem.setMotivo(dados.getMotivo());
+        viagem.setStatus(StatusViagem.CANCELADA);
+        return viagem;
+    }
+
+    private Usuario buscarUsuario(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário " + id + " não encontrado"));
+    }
+
+    // RN09 — transições só conforme o ciclo de vida (StatusViagem.podeMudarPara)
+    private void validarTransicao(Viagem viagem, StatusViagem novoStatus) {
+        if (!viagem.getStatus().podeMudarPara(novoStatus)) {
+            throw new RegraNegocioException("Não é possível mudar a viagem de " + viagem.getStatus()
+                    + " para " + novoStatus);
+        }
+    }
+
+    // RN09 — só o motorista alocado inicia/conclui
+    private void verificarMotoristaAlocado(Viagem viagem, Long usuarioId) {
+        Motorista motorista = viagem.getMotorista();
+        boolean ehOMotorista = motorista != null
+                && motorista.getUsuario() != null
+                && motorista.getUsuario().getId().equals(usuarioId);
+        if (!ehOMotorista) {
+            throw new AcessoNegadoException("Só o motorista alocado pode iniciar ou concluir esta viagem");
+        }
     }
 
     private void validarVeiculo(Viagem viagem, Veiculo veiculo) {
@@ -161,7 +242,7 @@ public class ViagemService {
         }
     }
 
-    // RN08 — também será verificada ao iniciar a viagem (f5)
+    // RN08 — usada na aprovação e de novo ao iniciar
     private void validarCnh(Viagem viagem, Motorista motorista, Veiculo veiculo) {
         // A CNH precisa valer até o fim da viagem
         if (motorista.getValidadeCnh().isBefore(viagem.getRetornoPrevisto().toLocalDate())) {
