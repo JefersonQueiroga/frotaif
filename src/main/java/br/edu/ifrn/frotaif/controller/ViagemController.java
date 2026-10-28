@@ -1,5 +1,6 @@
 package br.edu.ifrn.frotaif.controller;
 
+import br.edu.ifrn.frotaif.controller.doc.ViagemControllerDoc;
 import br.edu.ifrn.frotaif.model.Viagem;
 import br.edu.ifrn.frotaif.model.enums.StatusViagem;
 import br.edu.ifrn.frotaif.service.ViagemService;
@@ -12,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/viagens")
-public class ViagemController {
+public class ViagemController implements ViagemControllerDoc {
 
     private final ViagemService viagemService;
 

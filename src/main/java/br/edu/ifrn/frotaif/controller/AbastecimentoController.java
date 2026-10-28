@@ -1,5 +1,6 @@
 package br.edu.ifrn.frotaif.controller;
 
+import br.edu.ifrn.frotaif.controller.doc.AbastecimentoControllerDoc;
 import br.edu.ifrn.frotaif.model.Abastecimento;
 import br.edu.ifrn.frotaif.service.AbastecimentoService;
 import jakarta.validation.Valid;
@@ -11,7 +12,7 @@ import java.util.List;
 // Recurso aninhado: abastecimento só existe dentro de um veículo
 @RestController
 @RequestMapping("/api/veiculos/{veiculoId}/abastecimentos")
-public class AbastecimentoController {
+public class AbastecimentoController implements AbastecimentoControllerDoc {
 
     private final AbastecimentoService abastecimentoService;
 

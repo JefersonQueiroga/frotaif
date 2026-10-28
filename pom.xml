@@ -35,6 +35,13 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Documentação da API (OpenAPI + Swagger UI em /swagger-ui.html) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
         <!-- Console web do H2 (no Boot 4 virou módulo separado) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -26,6 +26,11 @@ spring:
       include-message: always
       include-stacktrace: never
 
+# Swagger UI: grupos em ordem alfabética
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+
 # Parâmetros de negócio (RN04) — lidos via @ConfigurationProperties
 frota:
   viagem:

@@ -1,5 +1,6 @@
 package br.edu.ifrn.frotaif.controller;
 
+import br.edu.ifrn.frotaif.controller.doc.MotoristaControllerDoc;
 import br.edu.ifrn.frotaif.model.Motorista;
 import br.edu.ifrn.frotaif.service.MotoristaService;
 import jakarta.validation.Valid;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/motoristas")
-public class MotoristaController {
+public class MotoristaController implements MotoristaControllerDoc {
 
     private final MotoristaService motoristaService;
 

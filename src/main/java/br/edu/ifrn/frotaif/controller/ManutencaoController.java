@@ -1,5 +1,6 @@
 package br.edu.ifrn.frotaif.controller;
 
+import br.edu.ifrn.frotaif.controller.doc.ManutencaoControllerDoc;
 import br.edu.ifrn.frotaif.model.Manutencao;
 import br.edu.ifrn.frotaif.service.ManutencaoService;
 import jakarta.validation.Valid;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class ManutencaoController {
+public class ManutencaoController implements ManutencaoControllerDoc {
 
     private final ManutencaoService manutencaoService;
 

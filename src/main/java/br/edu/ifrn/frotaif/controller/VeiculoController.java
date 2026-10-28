@@ -1,5 +1,6 @@
 package br.edu.ifrn.frotaif.controller;
 
+import br.edu.ifrn.frotaif.controller.doc.VeiculoControllerDoc;
 import br.edu.ifrn.frotaif.model.Veiculo;
 import br.edu.ifrn.frotaif.model.enums.StatusVeiculo;
 import br.edu.ifrn.frotaif.model.enums.TipoVeiculo;
@@ -12,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/veiculos")
-public class VeiculoController {
+public class VeiculoController implements VeiculoControllerDoc {
 
     private final VeiculoService veiculoService;
 
