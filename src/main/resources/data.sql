@@ -21,3 +21,9 @@ INSERT INTO motoristas (nome, cpf, registro_cnh, categoria_cnh, validade_cnh, us
   ('Diego Motorista', '52998224725', '04567812390', 'D', CURRENT_DATE + INTERVAL '600' DAY, 4, true),
   ('Elias Motorista', '11144477735', '07891234560', 'B', CURRENT_DATE + INTERVAL '20' DAY,  5, true),
   ('Fábio Motorista', '12345678909', '09988776655', 'D', CURRENT_DATE - INTERVAL '30' DAY,  6, true);
+
+-- Solicitações de viagem (RF05). Datas relativas para respeitar a antecedência mínima (RN04).
+INSERT INTO viagens (solicitante_id, destino, finalidade, saida, retorno_previsto, qtd_passageiros, status) VALUES
+  (2, 'Natal',     'Reunião na Reitoria',          CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY  + INTERVAL '7' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY  + INTERVAL '19' HOUR, 3,  'SOLICITADA'),
+  (3, 'Mossoró',   'Visita técnica com a turma',   CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '10' DAY + INTERVAL '6' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '10' DAY + INTERVAL '18' HOUR, 30, 'SOLICITADA'),
+  (2, 'Caicó',     'Banca de TCC',                 CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '15' DAY + INTERVAL '8' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '16' DAY + INTERVAL '12' HOUR, 2,  'SOLICITADA');
