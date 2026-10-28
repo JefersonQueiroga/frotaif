@@ -37,3 +37,7 @@ INSERT INTO abastecimentos (veiculo_id, data, litros, valor_total, km_no_abastec
   (1, CURRENT_DATE - INTERVAL '20' DAY, 40.00,  248.00, 34850,  'Posto Central'),
   (1, CURRENT_DATE - INTERVAL '6' DAY,  35.50,  223.65, 35180,  'Posto Central'),
   (3, CURRENT_DATE - INTERVAL '12' DAY, 70.00,  441.00, 102100, 'Posto BR 405');
+
+-- Manutenção já encerrada (histórico)
+INSERT INTO manutencoes (veiculo_id, tipo, descricao, data_inicio, data_prevista_fim, data_fim, custo) VALUES
+  (3, 'PREVENTIVA', 'Troca de óleo e filtros', CURRENT_DATE - INTERVAL '30' DAY, CURRENT_DATE - INTERVAL '28' DAY, CURRENT_DATE - INTERVAL '28' DAY, 850.00);

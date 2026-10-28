@@ -189,6 +189,20 @@ public class ViagemService {
         return viagem;
     }
 
+    // RN12 — chamado pelo ManutencaoService ao abrir uma manutenção.
+    // Roda dentro da transação de quem chamou: se a manutenção falhar, os cancelamentos são desfeitos.
+    @Transactional
+    public List<Viagem> cancelarAprovadasNoPeriodo(Long veiculoId, LocalDate inicio, LocalDate fim, String motivo) {
+        List<Viagem> viagens = viagemRepository.findByVeiculoIdAndStatusAndSaidaBeforeAndRetornoPrevistoAfter(
+                veiculoId, StatusViagem.APROVADA, fim.plusDays(1).atStartOfDay(), inicio.atStartOfDay());
+        for (Viagem viagem : viagens) {
+            validarTransicao(viagem, StatusViagem.CANCELADA);
+            viagem.setMotivo(motivo);
+            viagem.setStatus(StatusViagem.CANCELADA);
+        }
+        return viagens;
+    }
+
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário " + id + " não encontrado"));

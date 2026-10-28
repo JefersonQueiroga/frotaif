@@ -44,4 +44,8 @@ public interface ViagemRepository extends JpaRepository<Viagem, Long> {
             """)
     boolean existeConflitoDeMotorista(Long motoristaId, Collection<StatusViagem> status,
                                       LocalDateTime saida, LocalDateTime retorno);
+
+    // RN12 — viagens do veículo, num status, que se sobrepõem ao período (query method derivado do nome)
+    List<Viagem> findByVeiculoIdAndStatusAndSaidaBeforeAndRetornoPrevistoAfter(
+            Long veiculoId, StatusViagem status, LocalDateTime fimPeriodo, LocalDateTime inicioPeriodo);
 }
