@@ -16,7 +16,8 @@ INSERT INTO veiculos (placa, marca, modelo, ano, tipo, capacidade_passageiros, q
   ('OJK5E67', 'Volkswagen', 'Gol',      2014, 'CARRO',  4,  187000, 'INATIVO');
 
 -- Diego: CNH D válida · Elias: CNH B vencendo em breve · Fábio: CNH D vencida
+-- Validades relativas à data atual, para o cenário do RF04 funcionar em qualquer dia
 INSERT INTO motoristas (nome, cpf, registro_cnh, categoria_cnh, validade_cnh, usuario_id, ativo) VALUES
-  ('Diego Motorista', '52998224725', '04567812390', 'D', '2028-05-10', 4, true),
-  ('Elias Motorista', '11144477735', '07891234560', 'B', '2026-10-25', 5, true),
-  ('Fábio Motorista', '12345678909', '09988776655', 'D', '2026-08-01', 6, true);
+  ('Diego Motorista', '52998224725', '04567812390', 'D', CURRENT_DATE + INTERVAL '600' DAY, 4, true),
+  ('Elias Motorista', '11144477735', '07891234560', 'B', CURRENT_DATE + INTERVAL '20' DAY,  5, true),
+  ('Fábio Motorista', '12345678909', '09988776655', 'D', CURRENT_DATE - INTERVAL '30' DAY,  6, true);
