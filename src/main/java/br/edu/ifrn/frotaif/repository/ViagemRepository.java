@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface ViagemRepository extends JpaRepository<Viagem, Long> {
@@ -20,4 +21,27 @@ public interface ViagemRepository extends JpaRepository<Viagem, Long> {
             order by v.saida
             """)
     List<Viagem> filtrar(StatusViagem status, Long solicitanteId, LocalDateTime inicio, LocalDateTime fim);
+
+    // RN06 — o veículo já tem viagem (nos status informados) que se sobrepõe ao período?
+    // Dois períodos se sobrepõem quando um começa antes do outro terminar, e vice-versa.
+    @Query("""
+            select count(v) > 0 from Viagem v
+            where v.veiculo.id = :veiculoId
+              and v.status in :status
+              and v.saida < :retorno
+              and v.retornoPrevisto > :saida
+            """)
+    boolean existeConflitoDeVeiculo(Long veiculoId, Collection<StatusViagem> status,
+                                    LocalDateTime saida, LocalDateTime retorno);
+
+    // RN07 — mesma ideia para o motorista
+    @Query("""
+            select count(v) > 0 from Viagem v
+            where v.motorista.id = :motoristaId
+              and v.status in :status
+              and v.saida < :retorno
+              and v.retornoPrevisto > :saida
+            """)
+    boolean existeConflitoDeMotorista(Long motoristaId, Collection<StatusViagem> status,
+                                      LocalDateTime saida, LocalDateTime retorno);
 }

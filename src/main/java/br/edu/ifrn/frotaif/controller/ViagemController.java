@@ -39,4 +39,16 @@ public class ViagemController {
     public Viagem solicitar(@RequestBody @Valid Viagem viagem) {
         return viagemService.solicitar(viagem);
     }
+
+    // Corpo: {"veiculo": {"id": 1}, "motorista": {"id": 1}}
+    @PatchMapping("/{id}/aprovar")
+    public Viagem aprovar(@PathVariable Long id, @RequestBody Viagem dados) {
+        return viagemService.aprovar(id, dados);
+    }
+
+    // Corpo: {"motivo": "..."}
+    @PatchMapping("/{id}/rejeitar")
+    public Viagem rejeitar(@PathVariable Long id, @RequestBody Viagem dados) {
+        return viagemService.rejeitar(id, dados);
+    }
 }

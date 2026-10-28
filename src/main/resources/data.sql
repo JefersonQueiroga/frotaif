@@ -27,3 +27,7 @@ INSERT INTO viagens (solicitante_id, destino, finalidade, saida, retorno_previst
   (2, 'Natal',     'Reunião na Reitoria',          CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY  + INTERVAL '7' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY  + INTERVAL '19' HOUR, 3,  'SOLICITADA'),
   (3, 'Mossoró',   'Visita técnica com a turma',   CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '10' DAY + INTERVAL '6' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '10' DAY + INTERVAL '18' HOUR, 30, 'SOLICITADA'),
   (2, 'Caicó',     'Banca de TCC',                 CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '15' DAY + INTERVAL '8' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '16' DAY + INTERVAL '12' HOUR, 2,  'SOLICITADA');
+
+-- Viagem já APROVADA (Cronos + Diego) no mesmo dia da viagem 1, para demonstrar os conflitos RN06/RN07
+INSERT INTO viagens (solicitante_id, destino, finalidade, saida, retorno_previsto, qtd_passageiros, status, veiculo_id, motorista_id) VALUES
+  (3, 'Natal', 'Entrega de documentos', CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY + INTERVAL '8' HOUR, CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '5' DAY + INTERVAL '14' HOUR, 2, 'APROVADA', 1, 1);
