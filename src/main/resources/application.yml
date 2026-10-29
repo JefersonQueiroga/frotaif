@@ -1,4 +1,4 @@
-spring:
+onspring:
   application:
     name: frotaif
   datasource:
