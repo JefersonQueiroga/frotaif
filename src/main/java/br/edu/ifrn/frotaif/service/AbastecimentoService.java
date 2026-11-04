@@ -1,6 +1,9 @@
 package br.edu.ifrn.frotaif.service;
 
+import br.edu.ifrn.frotaif.dto.abastecimento.AbastecimentoRequest;
+import br.edu.ifrn.frotaif.dto.abastecimento.AbastecimentoResponse;
 import br.edu.ifrn.frotaif.exception.RegraNegocioException;
+import br.edu.ifrn.frotaif.mapper.AbastecimentoMapper;
 import br.edu.ifrn.frotaif.model.Abastecimento;
 import br.edu.ifrn.frotaif.model.Veiculo;
 import br.edu.ifrn.frotaif.repository.AbastecimentoRepository;
@@ -14,24 +17,28 @@ public class AbastecimentoService {
 
     private final AbastecimentoRepository abastecimentoRepository;
     private final VeiculoService veiculoService;
+    private final AbastecimentoMapper abastecimentoMapper;
 
-    public AbastecimentoService(AbastecimentoRepository abastecimentoRepository, VeiculoService veiculoService) {
+    public AbastecimentoService(AbastecimentoRepository abastecimentoRepository,
+                                VeiculoService veiculoService,
+                                AbastecimentoMapper abastecimentoMapper) {
         this.abastecimentoRepository = abastecimentoRepository;
         this.veiculoService = veiculoService;
+        this.abastecimentoMapper = abastecimentoMapper;
     }
 
-    public List<Abastecimento> listar(Long veiculoId) {
-        veiculoService.buscarPorId(veiculoId); // 404 se o veículo não existir
-        return abastecimentoRepository.findByVeiculoIdOrderByDataDescIdDesc(veiculoId);
+    public List<AbastecimentoResponse> listar(Long veiculoId) {
+        veiculoService.buscarEntidade(veiculoId); // 404 se o veículo não existir
+        return abastecimentoMapper.toResponseList(abastecimentoRepository.findByVeiculoIdOrderByDataDescIdDesc(veiculoId));
     }
 
     @Transactional
-    public Abastecimento registrar(Long veiculoId, Abastecimento abastecimento) {
-        Veiculo veiculo = veiculoService.buscarPorId(veiculoId);
+    public AbastecimentoResponse registrar(Long veiculoId, AbastecimentoRequest request) {
+        Veiculo veiculo = veiculoService.buscarEntidade(veiculoId);
 
         // RN11 — o km não pode ser menor que o último conhecido. Como todo abastecimento
         // e toda viagem concluída atualizam a quilometragemAtual, ela é o último km conhecido.
-        Long km = abastecimento.getKmNoAbastecimento();
+        Long km = request.kmNoAbastecimento();
         if (km < veiculo.getQuilometragemAtual()) {
             throw new RegraNegocioException("O km informado (" + km + ") é menor que o último km conhecido do veículo ("
                     + veiculo.getQuilometragemAtual() + ")");
@@ -41,8 +48,8 @@ public class AbastecimentoService {
             veiculo.setQuilometragemAtual(km);
         }
 
-        abastecimento.setId(null);
+        Abastecimento abastecimento = abastecimentoMapper.toEntity(request);
         abastecimento.setVeiculo(veiculo);
-        return abastecimentoRepository.save(abastecimento);
+        return abastecimentoMapper.toResponse(abastecimentoRepository.save(abastecimento));
     }
 }

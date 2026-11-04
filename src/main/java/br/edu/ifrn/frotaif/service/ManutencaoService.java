@@ -1,8 +1,12 @@
 package br.edu.ifrn.frotaif.service;
 
+import br.edu.ifrn.frotaif.dto.manutencao.AbrirManutencaoRequest;
+import br.edu.ifrn.frotaif.dto.manutencao.EncerrarManutencaoRequest;
+import br.edu.ifrn.frotaif.dto.manutencao.ManutencaoResponse;
 import br.edu.ifrn.frotaif.exception.ConflitoException;
 import br.edu.ifrn.frotaif.exception.RecursoNaoEncontradoException;
 import br.edu.ifrn.frotaif.exception.RegraNegocioException;
+import br.edu.ifrn.frotaif.mapper.ManutencaoMapper;
 import br.edu.ifrn.frotaif.model.Manutencao;
 import br.edu.ifrn.frotaif.model.Veiculo;
 import br.edu.ifrn.frotaif.model.enums.StatusVeiculo;
@@ -19,28 +23,31 @@ public class ManutencaoService {
     private final ManutencaoRepository manutencaoRepository;
     private final VeiculoService veiculoService;
     private final ViagemService viagemService;
+    private final ManutencaoMapper manutencaoMapper;
 
     public ManutencaoService(ManutencaoRepository manutencaoRepository,
                              VeiculoService veiculoService,
-                             ViagemService viagemService) {
+                             ViagemService viagemService,
+                             ManutencaoMapper manutencaoMapper) {
         this.manutencaoRepository = manutencaoRepository;
         this.veiculoService = veiculoService;
         this.viagemService = viagemService;
+        this.manutencaoMapper = manutencaoMapper;
     }
 
-    public List<Manutencao> listar(Long veiculoId) {
-        veiculoService.buscarPorId(veiculoId); // 404 se o veículo não existir
-        return manutencaoRepository.findByVeiculoIdOrderByDataInicioDescIdDesc(veiculoId);
+    public List<ManutencaoResponse> listar(Long veiculoId) {
+        veiculoService.buscarEntidade(veiculoId); // 404 se o veículo não existir
+        return manutencaoMapper.toResponseList(manutencaoRepository.findByVeiculoIdOrderByDataInicioDescIdDesc(veiculoId));
     }
 
-    public Manutencao buscarPorId(Long id) {
+    private Manutencao buscarEntidade(Long id) {
         return manutencaoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Manutenção " + id + " não encontrada"));
     }
 
     @Transactional
-    public Manutencao abrir(Long veiculoId, Manutencao manutencao) {
-        Veiculo veiculo = veiculoService.buscarPorId(veiculoId);
+    public ManutencaoResponse abrir(Long veiculoId, AbrirManutencaoRequest request) {
+        Veiculo veiculo = veiculoService.buscarEntidade(veiculoId);
 
         // RN12 — bloqueada se o veículo estiver EM_VIAGEM. Também não abre se já estiver
         // em manutenção ou inativo (o encerramento o tornaria DISPONIVEL por engano).
@@ -48,14 +55,13 @@ public class ManutencaoService {
             throw new ConflitoException("Não é possível abrir manutenção: o veículo " + veiculo.getPlaca()
                     + " está " + veiculo.getStatus());
         }
-        if (manutencao.getDataPrevistaFim().isBefore(manutencao.getDataInicio())) {
+        if (request.dataPrevistaFim().isBefore(request.dataInicio())) {
             throw new RegraNegocioException("A data prevista de fim não pode ser anterior à data de início");
         }
 
-        manutencao.setId(null);
+        // O mapper não copia id, dataFim nem custo (só existem no encerramento)
+        Manutencao manutencao = manutencaoMapper.toEntity(request);
         manutencao.setVeiculo(veiculo);
-        manutencao.setDataFim(null);
-        manutencao.setCusto(null);
         manutencaoRepository.save(manutencao);
 
         // RN12 — veículo em manutenção e viagens APROVADAS do período canceladas,
@@ -64,26 +70,26 @@ public class ManutencaoService {
         viagemService.cancelarAprovadasNoPeriodo(veiculo.getId(),
                 manutencao.getDataInicio(), manutencao.getDataPrevistaFim(),
                 "Cancelada automaticamente: manutenção " + manutencao.getId() + " do veículo " + veiculo.getPlaca());
-        return manutencao;
+        return manutencaoMapper.toResponse(manutencao);
     }
 
     @Transactional
-    public Manutencao encerrar(Long id, Manutencao dados) {
-        Manutencao manutencao = buscarPorId(id);
+    public ManutencaoResponse encerrar(Long id, EncerrarManutencaoRequest request) {
+        Manutencao manutencao = buscarEntidade(id);
         if (!manutencao.isAberta()) {
             throw new RegraNegocioException("A manutenção " + id + " já foi encerrada em " + manutencao.getDataFim());
         }
         // RN13 — custo obrigatório (≥ 0) e data de fim válida
-        if (dados.getCusto() == null || dados.getCusto().compareTo(BigDecimal.ZERO) < 0) {
+        if (request.custo() == null || request.custo().compareTo(BigDecimal.ZERO) < 0) {
             throw new RegraNegocioException("Informe o custo da manutenção (maior ou igual a zero)");
         }
-        if (dados.getDataFim() == null || dados.getDataFim().isBefore(manutencao.getDataInicio())) {
+        if (request.dataFim() == null || request.dataFim().isBefore(manutencao.getDataInicio())) {
             throw new RegraNegocioException("Informe a data de fim (não anterior a " + manutencao.getDataInicio() + ")");
         }
 
-        manutencao.setDataFim(dados.getDataFim());
-        manutencao.setCusto(dados.getCusto());
+        manutencao.setDataFim(request.dataFim());
+        manutencao.setCusto(request.custo());
         manutencao.getVeiculo().setStatus(StatusVeiculo.DISPONIVEL); // RN13
-        return manutencao;
+        return manutencaoMapper.toResponse(manutencao);
     }
 }

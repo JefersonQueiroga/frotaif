@@ -1,6 +1,7 @@
 package br.edu.ifrn.frotaif.controller.doc;
 
-import br.edu.ifrn.frotaif.model.Abastecimento;
+import br.edu.ifrn.frotaif.dto.abastecimento.AbastecimentoRequest;
+import br.edu.ifrn.frotaif.dto.abastecimento.AbastecimentoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,7 +19,7 @@ public interface AbastecimentoControllerDoc {
     @Operation(summary = "Lista os abastecimentos de um veículo", description = "Do mais recente para o mais antigo.")
     @ApiResponse(responseCode = "200", description = "Lista de abastecimentos")
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado")
-    List<Abastecimento> listar(@Parameter(description = "Id do veículo", example = "1") Long veiculoId);
+    List<AbastecimentoResponse> listar(@Parameter(description = "Id do veículo", example = "1") Long veiculoId);
 
     @Operation(summary = "Registra um abastecimento",
             description = "O km informado não pode ser menor que o último conhecido do veículo; "
@@ -27,9 +28,9 @@ public interface AbastecimentoControllerDoc {
     @ApiResponse(responseCode = "400", description = "Dados inválidos (ex.: data futura, litros ≤ 0)")
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado")
     @ApiResponse(responseCode = "422", description = "Km menor que o último conhecido (RN11)")
-    Abastecimento registrar(@Parameter(description = "Id do veículo", example = "1") Long veiculoId,
+    AbastecimentoResponse registrar(@Parameter(description = "Id do veículo", example = "1") Long veiculoId,
                             @RequestBody(content = @Content(examples = @ExampleObject(value = """
                                     {"data": "2026-10-28", "litros": 42.3, "valorTotal": 266.49,
                                      "kmNoAbastecimento": 35600, "posto": "Posto Central"}
-                                    """))) Abastecimento abastecimento);
+                                    """))) AbastecimentoRequest request);
 }

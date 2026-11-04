@@ -1,6 +1,7 @@
 package br.edu.ifrn.frotaif.controller.doc;
 
-import br.edu.ifrn.frotaif.model.Veiculo;
+import br.edu.ifrn.frotaif.dto.veiculo.VeiculoRequest;
+import br.edu.ifrn.frotaif.dto.veiculo.VeiculoResponse;
 import br.edu.ifrn.frotaif.model.enums.StatusVeiculo;
 import br.edu.ifrn.frotaif.model.enums.TipoVeiculo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,14 +17,14 @@ public interface VeiculoControllerDoc {
 
     @Operation(summary = "Lista veículos",
             description = "Sem filtro de status, os veículos INATIVOS ficam de fora (RN02).")
-    List<Veiculo> listar(
+    List<VeiculoResponse> listar(
             @Parameter(description = "Filtra por status. Use INATIVO para ver os excluídos") StatusVeiculo status,
             @Parameter(description = "Filtra por tipo") TipoVeiculo tipo);
 
     @Operation(summary = "Busca um veículo pelo id", description = "Retorna inclusive veículos inativos.")
     @ApiResponse(responseCode = "200", description = "Veículo encontrado")
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado")
-    Veiculo buscarPorId(@Parameter(description = "Id do veículo", example = "1") Long id);
+    VeiculoResponse buscarPorId(@Parameter(description = "Id do veículo", example = "1") Long id);
 
     @Operation(summary = "Cadastra um veículo",
             description = "O veículo começa DISPONIVEL e com a quilometragem informada (ou 0). "
@@ -31,7 +32,7 @@ public interface VeiculoControllerDoc {
     @ApiResponse(responseCode = "201", description = "Veículo cadastrado")
     @ApiResponse(responseCode = "400", description = "Dados inválidos (ex.: placa fora do formato Mercosul)")
     @ApiResponse(responseCode = "409", description = "Já existe veículo com essa placa (RN01)")
-    Veiculo cadastrar(Veiculo veiculo);
+    VeiculoResponse cadastrar(VeiculoRequest request);
 
     @Operation(summary = "Edita um veículo",
             description = "Não altera status nem quilometragem: eles mudam pelas viagens, abastecimentos e manutenções.")
@@ -39,7 +40,7 @@ public interface VeiculoControllerDoc {
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado")
     @ApiResponse(responseCode = "409", description = "A placa já pertence a outro veículo (RN01)")
-    Veiculo atualizar(@Parameter(description = "Id do veículo", example = "1") Long id, Veiculo veiculo);
+    VeiculoResponse atualizar(@Parameter(description = "Id do veículo", example = "1") Long id, VeiculoRequest request);
 
     @Operation(summary = "Inativa um veículo", description = "Exclusão lógica: o veículo passa a INATIVO (RN02).")
     @ApiResponse(responseCode = "204", description = "Veículo inativado")
@@ -50,5 +51,5 @@ public interface VeiculoControllerDoc {
     @ApiResponse(responseCode = "200", description = "Veículo reativado")
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado")
     @ApiResponse(responseCode = "422", description = "O veículo não está inativo")
-    Veiculo reativar(@Parameter(description = "Id do veículo", example = "5") Long id);
+    VeiculoResponse reativar(@Parameter(description = "Id do veículo", example = "5") Long id);
 }

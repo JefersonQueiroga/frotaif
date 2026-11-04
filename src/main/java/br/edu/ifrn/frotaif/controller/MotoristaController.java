@@ -1,7 +1,8 @@
 package br.edu.ifrn.frotaif.controller;
 
 import br.edu.ifrn.frotaif.controller.doc.MotoristaControllerDoc;
-import br.edu.ifrn.frotaif.model.Motorista;
+import br.edu.ifrn.frotaif.dto.motorista.MotoristaRequest;
+import br.edu.ifrn.frotaif.dto.motorista.MotoristaResponse;
 import br.edu.ifrn.frotaif.service.MotoristaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,29 +21,29 @@ public class MotoristaController implements MotoristaControllerDoc {
     }
 
     @GetMapping
-    public List<Motorista> listar() {
+    public List<MotoristaResponse> listar() {
         return motoristaService.listar();
     }
 
     @GetMapping("/{id}")
-    public Motorista buscarPorId(@PathVariable Long id) {
+    public MotoristaResponse buscarPorId(@PathVariable Long id) {
         return motoristaService.buscarPorId(id);
     }
 
     @GetMapping("/cnh-vencendo")
-    public List<Motorista> listarComCnhVencendo(@RequestParam(defaultValue = "30") int dias) {
+    public List<MotoristaResponse> listarComCnhVencendo(@RequestParam(defaultValue = "30") int dias) {
         return motoristaService.listarComCnhVencendo(dias);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Motorista cadastrar(@RequestBody @Valid Motorista motorista) {
-        return motoristaService.cadastrar(motorista);
+    public MotoristaResponse cadastrar(@RequestBody @Valid MotoristaRequest request) {
+        return motoristaService.cadastrar(request);
     }
 
     @PutMapping("/{id}")
-    public Motorista atualizar(@PathVariable Long id, @RequestBody @Valid Motorista motorista) {
-        return motoristaService.atualizar(id, motorista);
+    public MotoristaResponse atualizar(@PathVariable Long id, @RequestBody @Valid MotoristaRequest request) {
+        return motoristaService.atualizar(id, request);
     }
 
     @DeleteMapping("/{id}")

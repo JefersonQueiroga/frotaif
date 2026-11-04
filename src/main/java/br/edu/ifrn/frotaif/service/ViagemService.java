@@ -1,10 +1,16 @@
 package br.edu.ifrn.frotaif.service;
 
 import br.edu.ifrn.frotaif.config.ViagemProperties;
+import br.edu.ifrn.frotaif.dto.viagem.AprovarViagemRequest;
+import br.edu.ifrn.frotaif.dto.viagem.ConcluirViagemRequest;
+import br.edu.ifrn.frotaif.dto.viagem.MotivoRequest;
+import br.edu.ifrn.frotaif.dto.viagem.SolicitarViagemRequest;
+import br.edu.ifrn.frotaif.dto.viagem.ViagemResponse;
 import br.edu.ifrn.frotaif.exception.AcessoNegadoException;
 import br.edu.ifrn.frotaif.exception.ConflitoException;
 import br.edu.ifrn.frotaif.exception.RecursoNaoEncontradoException;
 import br.edu.ifrn.frotaif.exception.RegraNegocioException;
+import br.edu.ifrn.frotaif.mapper.ViagemMapper;
 import br.edu.ifrn.frotaif.model.Motorista;
 import br.edu.ifrn.frotaif.model.Usuario;
 import br.edu.ifrn.frotaif.model.Veiculo;
@@ -34,75 +40,76 @@ public class ViagemService {
     private final VeiculoService veiculoService;
     private final MotoristaService motoristaService;
     private final ViagemProperties viagemProperties;
+    private final ViagemMapper viagemMapper;
 
     public ViagemService(ViagemRepository viagemRepository,
                          UsuarioRepository usuarioRepository,
                          VeiculoService veiculoService,
                          MotoristaService motoristaService,
-                         ViagemProperties viagemProperties) {
+                         ViagemProperties viagemProperties,
+                         ViagemMapper viagemMapper) {
         this.viagemRepository = viagemRepository;
         this.usuarioRepository = usuarioRepository;
         this.veiculoService = veiculoService;
         this.motoristaService = motoristaService;
         this.viagemProperties = viagemProperties;
+        this.viagemMapper = viagemMapper;
     }
 
-    public List<Viagem> listar(StatusViagem status, Long solicitanteId, LocalDate inicio, LocalDate fim) {
+    public List<ViagemResponse> listar(StatusViagem status, Long solicitanteId, LocalDate inicio, LocalDate fim) {
         if (inicio != null && fim != null && fim.isBefore(inicio)) {
             throw new RegraNegocioException("A data final do período não pode ser anterior à inicial");
         }
         // Período por dia inteiro: de inicio 00:00 até o fim do dia "fim"
         LocalDateTime inicioPeriodo = inicio == null ? null : inicio.atStartOfDay();
         LocalDateTime fimPeriodo = fim == null ? null : fim.plusDays(1).atStartOfDay();
-        return viagemRepository.filtrar(status, solicitanteId, inicioPeriodo, fimPeriodo);
+        return viagemMapper.toResponseList(viagemRepository.filtrar(status, solicitanteId, inicioPeriodo, fimPeriodo));
     }
 
-    public Viagem buscarPorId(Long id) {
+    public ViagemResponse buscarPorId(Long id) {
+        return viagemMapper.toResponse(buscarEntidade(id));
+    }
+
+    private Viagem buscarEntidade(Long id) {
         return viagemRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Viagem " + id + " não encontrada"));
     }
 
     @Transactional
-    public Viagem solicitar(Viagem viagem) {
-        Usuario solicitante = buscarUsuario(viagem.getSolicitante().getId());
+    public ViagemResponse solicitar(SolicitarViagemRequest request) {
+        Usuario solicitante = buscarUsuario(request.solicitanteId());
         if (!solicitante.isAtivo()) {
             throw new RegraNegocioException("Usuário inativo não pode solicitar viagens");
         }
 
-        if (!viagem.getRetornoPrevisto().isAfter(viagem.getSaida())) {
+        if (!request.retornoPrevisto().isAfter(request.saida())) {
             throw new RegraNegocioException("O retorno previsto deve ser posterior à saída");
         }
 
         // RN04 — antecedência mínima configurável
         int horas = viagemProperties.antecedenciaMinimaHoras();
-        if (viagem.getSaida().isBefore(LocalDateTime.now().plusHours(horas))) {
+        if (request.saida().isBefore(LocalDateTime.now().plusHours(horas))) {
             throw new RegraNegocioException("A viagem deve ser solicitada com pelo menos " + horas + "h de antecedência");
         }
 
-        // Campos que o solicitante não define: veículo e motorista vêm na aprovação (RF06)
-        viagem.setId(null);
+        // O request nem tem veículo, motorista, km ou status: o cliente não consegue defini-los (RF06).
+        // A viagem nasce SOLICITADA (valor padrão da entidade).
+        Viagem viagem = viagemMapper.toEntity(request);
         viagem.setSolicitante(solicitante);
-        viagem.setVeiculo(null);
-        viagem.setMotorista(null);
-        viagem.setKmInicial(null);
-        viagem.setKmFinal(null);
-        viagem.setMotivo(null);
-        viagem.setStatus(StatusViagem.SOLICITADA);
-        return viagemRepository.save(viagem);
+        return viagemMapper.toResponse(viagemRepository.save(viagem));
     }
 
     @Transactional
-    public Viagem aprovar(Long id, Viagem dados) {
-        Viagem viagem = buscarPorId(id);
+    public ViagemResponse aprovar(Long id, AprovarViagemRequest request) {
+        Viagem viagem = buscarEntidade(id);
         validarTransicao(viagem, StatusViagem.APROVADA);
-        if (dados.getVeiculo() == null || dados.getVeiculo().getId() == null
-                || dados.getMotorista() == null || dados.getMotorista().getId() == null) {
+        if (request.veiculoId() == null || request.motoristaId() == null) {
             throw new RegraNegocioException("Informe o veículo e o motorista da viagem");
         }
 
-        // buscarPorId dos outros services já lança 404 se não existir
-        Veiculo veiculo = veiculoService.buscarPorId(dados.getVeiculo().getId());
-        Motorista motorista = motoristaService.buscarPorId(dados.getMotorista().getId());
+        // buscarEntidade dos outros services já lança 404 se não existir
+        Veiculo veiculo = veiculoService.buscarEntidade(request.veiculoId());
+        Motorista motorista = motoristaService.buscarEntidade(request.motoristaId());
 
         validarVeiculo(viagem, veiculo);
         validarMotorista(viagem, motorista);
@@ -111,25 +118,25 @@ public class ViagemService {
         viagem.setVeiculo(veiculo);
         viagem.setMotorista(motorista);
         viagem.setStatus(StatusViagem.APROVADA);
-        return viagem;
+        return viagemMapper.toResponse(viagem);
     }
 
     @Transactional
-    public Viagem rejeitar(Long id, Viagem dados) {
-        Viagem viagem = buscarPorId(id);
+    public ViagemResponse rejeitar(Long id, MotivoRequest request) {
+        Viagem viagem = buscarEntidade(id);
         validarTransicao(viagem, StatusViagem.REJEITADA);
-        if (dados.getMotivo() == null || dados.getMotivo().isBlank()) {
+        if (request.motivo() == null || request.motivo().isBlank()) {
             throw new RegraNegocioException("Informe o motivo da rejeição");
         }
-        viagem.setMotivo(dados.getMotivo());
+        viagem.setMotivo(request.motivo());
         viagem.setStatus(StatusViagem.REJEITADA);
-        return viagem;
+        return viagemMapper.toResponse(viagem);
     }
 
     // usuarioId: quem está agindo (header X-Usuario-Id até a aula de Security)
     @Transactional
-    public Viagem iniciar(Long id, Long usuarioId) {
-        Viagem viagem = buscarPorId(id);
+    public ViagemResponse iniciar(Long id, Long usuarioId) {
+        Viagem viagem = buscarEntidade(id);
         verificarMotoristaAlocado(viagem, usuarioId); // RN09
         validarTransicao(viagem, StatusViagem.EM_ANDAMENTO);
 
@@ -144,17 +151,17 @@ public class ViagemService {
         viagem.setKmInicial(veiculo.getQuilometragemAtual());
         veiculo.setStatus(StatusVeiculo.EM_VIAGEM);
         viagem.setStatus(StatusViagem.EM_ANDAMENTO);
-        return viagem; // dirty checking grava viagem E veículo na mesma transação
+        return viagemMapper.toResponse(viagem); // dirty checking grava viagem E veículo na mesma transação
     }
 
     @Transactional
-    public Viagem concluir(Long id, Long usuarioId, Viagem dados) {
-        Viagem viagem = buscarPorId(id);
+    public ViagemResponse concluir(Long id, Long usuarioId, ConcluirViagemRequest request) {
+        Viagem viagem = buscarEntidade(id);
         verificarMotoristaAlocado(viagem, usuarioId); // RN09
         validarTransicao(viagem, StatusViagem.CONCLUIDA);
 
         // RN10 — km final maior que o inicial; atualiza o veículo e o libera
-        Long kmFinal = dados.getKmFinal();
+        Long kmFinal = request.kmFinal();
         if (kmFinal == null || kmFinal <= viagem.getKmInicial()) {
             throw new RegraNegocioException("O km final deve ser maior que o km inicial (" + viagem.getKmInicial() + ")");
         }
@@ -164,12 +171,12 @@ public class ViagemService {
 
         viagem.setKmFinal(kmFinal);
         viagem.setStatus(StatusViagem.CONCLUIDA);
-        return viagem;
+        return viagemMapper.toResponse(viagem);
     }
 
     @Transactional
-    public Viagem cancelar(Long id, Long usuarioId, Viagem dados) {
-        Viagem viagem = buscarPorId(id);
+    public ViagemResponse cancelar(Long id, Long usuarioId, MotivoRequest request) {
+        Viagem viagem = buscarEntidade(id);
         Usuario usuario = buscarUsuario(usuarioId);
 
         // RN14 — o gestor cancela qualquer viagem; os demais, só as próprias
@@ -181,15 +188,15 @@ public class ViagemService {
         // RN14 — apenas enquanto SOLICITADA ou APROVADA
         validarTransicao(viagem, StatusViagem.CANCELADA);
 
-        if (dados.getMotivo() == null || dados.getMotivo().isBlank()) {
+        if (request.motivo() == null || request.motivo().isBlank()) {
             throw new RegraNegocioException("Informe o motivo do cancelamento");
         }
-        viagem.setMotivo(dados.getMotivo());
+        viagem.setMotivo(request.motivo());
         viagem.setStatus(StatusViagem.CANCELADA);
-        return viagem;
+        return viagemMapper.toResponse(viagem);
     }
 
-    // RN12 — chamado pelo ManutencaoService ao abrir uma manutenção.
+    // RN12 — chamado pelo ManutencaoService ao abrir uma manutenção (uso interno: trabalha com entidades).
     // Roda dentro da transação de quem chamou: se a manutenção falhar, os cancelamentos são desfeitos.
     @Transactional
     public List<Viagem> cancelarAprovadasNoPeriodo(Long veiculoId, LocalDate inicio, LocalDate fim, String motivo) {

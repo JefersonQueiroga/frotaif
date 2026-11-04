@@ -1,7 +1,6 @@
 package br.edu.ifrn.frotaif.model;
 
 import br.edu.ifrn.frotaif.model.enums.Papel;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,8 +23,7 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 120)
     private String email;
 
-    // @JsonIgnore é provisório: na aula de DTO a entidade deixa de ser exposta na API.
-    @JsonIgnore
+    // Nunca sai na API: as respostas usam DTOs (UsuarioResumoResponse), sem a senha
     private String senha;
 
     @Enumerated(EnumType.STRING)
