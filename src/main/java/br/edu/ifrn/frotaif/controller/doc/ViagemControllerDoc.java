@@ -20,7 +20,7 @@ import java.util.List;
 
 // Documentação da API (Swagger) do ViagemController — o controller só implementa esta interface
 @Tag(name = "Viagens", description = "Solicitação, aprovação e execução de viagens (RF05–RF09)")
-// O usuário que age é o logado (HTTP Basic): o parâmetro Usuario fica oculto no Swagger
+// O usuário que age é o dono do token: o parâmetro Usuario fica oculto no Swagger
 public interface ViagemControllerDoc {
 
     @Operation(summary = "Lista viagens", description = "Todos os filtros são opcionais e podem ser combinados (RF09). "

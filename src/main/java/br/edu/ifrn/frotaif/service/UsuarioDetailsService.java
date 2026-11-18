@@ -6,8 +6,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-// A única ponte entre o Spring Security e o banco.
-// Havendo este bean e um PasswordEncoder, o framework monta o resto do caminho do login sozinho.
+// A ponte entre o Spring Security e o banco no login (POST /api/auth/login).
+// Havendo este bean e um PasswordEncoder, o framework monta o AuthenticationManager sozinho.
 @Service
 public class UsuarioDetailsService implements UserDetailsService {
 

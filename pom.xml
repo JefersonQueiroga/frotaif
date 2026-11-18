@@ -41,6 +41,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!-- Token JWT: o filtro que confere o "Authorization: Bearer" e a biblioteca que assina o token (Nimbus) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+        </dependency>
 
         <!-- Documentação da API (OpenAPI + Swagger UI em /swagger-ui.html) -->
         <dependency>

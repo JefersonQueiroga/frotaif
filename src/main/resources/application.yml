@@ -35,3 +35,8 @@ springdoc:
 frota:
   viagem:
     antecedencia-minima-horas: 24
+  # Token JWT (JwtProperties). O segredo assina os tokens: quem o conhece consegue forjar um token.
+  # Em produção, defina a variável de ambiente FROTA_JWT_SEGREDO (no mínimo 32 caracteres).
+  jwt:
+    segredo: ${FROTA_JWT_SEGREDO:frotaif-segredo-de-desenvolvimento-troque-em-producao}
+    expiracao-minutos: 60
