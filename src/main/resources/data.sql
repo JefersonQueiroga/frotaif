@@ -1,12 +1,15 @@
 -- Dados de exemplo para as aulas (recriados a cada execução)
 
-INSERT INTO usuarios (nome, email, papel, ativo) VALUES
-  ('Ana Gestora',     'gestor@ifrn.edu.br',     'GESTOR',    true),
-  ('Bruno Servidor',  'servidor@ifrn.edu.br',   'SERVIDOR',  true),
-  ('Carla Servidora', 'carla@ifrn.edu.br',      'SERVIDOR',  true),
-  ('Diego Motorista', 'diego@terceirizada.com', 'MOTORISTA', true),
-  ('Elias Motorista', 'elias@terceirizada.com', 'MOTORISTA', true),
-  ('Fábio Motorista', 'fabio@terceirizada.com', 'MOTORISTA', true);
+-- Login: e-mail + senha "123456". A coluna senha guarda só o hash BCrypt (gerado pelo PasswordEncoder).
+-- Gil está inativo (RN02): existe no banco, mas o login responde 401.
+INSERT INTO usuarios (nome, email, senha, papel, ativo) VALUES
+  ('Ana Gestora',     'gestor@ifrn.edu.br',     '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'GESTOR',    true),
+  ('Bruno Servidor',  'servidor@ifrn.edu.br',   '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'SERVIDOR',  true),
+  ('Carla Servidora', 'carla@ifrn.edu.br',      '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'SERVIDOR',  true),
+  ('Diego Motorista', 'diego@terceirizada.com', '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'MOTORISTA', true),
+  ('Elias Motorista', 'elias@terceirizada.com', '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'MOTORISTA', true),
+  ('Fábio Motorista', 'fabio@terceirizada.com', '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'MOTORISTA', true),
+  ('Gil Inativo',     'inativo@ifrn.edu.br',    '$2a$10$PycLfUedAU5AWbew5sLcH.666MUV0hBUZ3P2wb8cmYCgLHk0LT2r2', 'SERVIDOR',  false);
 
 INSERT INTO veiculos (placa, marca, modelo, ano, tipo, capacidade_passageiros, quilometragem_atual, status) VALUES
   ('RNX1A23', 'Fiat',       'Cronos',   2022, 'CARRO',  4,  35210,  'DISPONIVEL'),

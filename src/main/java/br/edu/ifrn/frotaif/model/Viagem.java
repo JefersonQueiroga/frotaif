@@ -19,7 +19,7 @@ public class Viagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Até a aula de Security, o cliente informa o solicitanteId no SolicitarViagemRequest
+    // O solicitante é o usuário logado no momento da solicitação
     @ManyToOne(optional = false)
     @JoinColumn(name = "solicitante_id", nullable = false)
     private Usuario solicitante;

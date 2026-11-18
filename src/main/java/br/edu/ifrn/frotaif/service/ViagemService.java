@@ -75,9 +75,10 @@ public class ViagemService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Viagem " + id + " não encontrada"));
     }
 
+    // solicitanteId: o usuário logado (vem do Spring Security, não do corpo da requisição)
     @Transactional
-    public ViagemResponse solicitar(SolicitarViagemRequest request) {
-        Usuario solicitante = buscarUsuario(request.solicitanteId());
+    public ViagemResponse solicitar(SolicitarViagemRequest request, Long solicitanteId) {
+        Usuario solicitante = buscarUsuario(solicitanteId);
         if (!solicitante.isAtivo()) {
             throw new RegraNegocioException("Usuário inativo não pode solicitar viagens");
         }
@@ -133,7 +134,7 @@ public class ViagemService {
         return viagemMapper.toResponse(viagem);
     }
 
-    // usuarioId: quem está agindo (header X-Usuario-Id até a aula de Security)
+    // usuarioId: quem está agindo (o usuário logado, via @AuthenticationPrincipal no controller)
     @Transactional
     public ViagemResponse iniciar(Long id, Long usuarioId) {
         Viagem viagem = buscarEntidade(id);

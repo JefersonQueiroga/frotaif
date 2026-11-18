@@ -12,7 +12,7 @@ import java.util.List;
 @Mapper(uses = {UsuarioMapper.class, VeiculoMapper.class, MotoristaMapper.class})
 public interface ViagemMapper {
 
-    // O solicitante é buscado pelo service a partir de solicitanteId.
+    // O solicitante é o usuário logado: o service o define depois.
     // Os demais campos são definidos depois, pelas regras de aprovação e execução (RF06, RN10).
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "solicitante", ignore = true)
