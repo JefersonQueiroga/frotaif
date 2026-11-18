@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
-// Veículo, motorista, km e status NÃO estão aqui: o solicitante não define (RF06)
+// Veículo, motorista, km e status NÃO estão aqui: o solicitante não define (RF06).
+// O solicitante também não: é o usuário logado (t3-security).
 public record SolicitarViagemRequest(
-        @NotNull Long solicitanteId,   // até a aula de Security, o cliente informa quem solicita
         @NotBlank String destino,
         @NotBlank String finalidade,
         @NotNull LocalDateTime saida,

@@ -5,6 +5,7 @@ import br.edu.ifrn.frotaif.dto.viagem.ConcluirViagemRequest;
 import br.edu.ifrn.frotaif.dto.viagem.MotivoRequest;
 import br.edu.ifrn.frotaif.dto.viagem.SolicitarViagemRequest;
 import br.edu.ifrn.frotaif.dto.viagem.ViagemResponse;
+import br.edu.ifrn.frotaif.model.Usuario;
 import br.edu.ifrn.frotaif.model.enums.StatusViagem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,9 +20,8 @@ import java.util.List;
 
 // Documentação da API (Swagger) do ViagemController — o controller só implementa esta interface
 @Tag(name = "Viagens", description = "Solicitação, aprovação e execução de viagens (RF05–RF09)")
+// O usuário que age é o dono do token: o parâmetro Usuario fica oculto no Swagger
 public interface ViagemControllerDoc {
-
-    String USUARIO = "Id do usuário que está agindo (simula o login até a aula de Security)";
 
     @Operation(summary = "Lista viagens", description = "Todos os filtros são opcionais e podem ser combinados (RF09). "
             + "O período é filtrado pela data de saída.")
@@ -43,12 +43,12 @@ public interface ViagemControllerDoc {
                     + "em frota.viagem.antecedencia-minima-horas (RN04) e o retorno deve ser posterior à saída.")
     @ApiResponse(responseCode = "201", description = "Viagem solicitada")
     @ApiResponse(responseCode = "400", description = "Campos obrigatórios ausentes ou inválidos")
-    @ApiResponse(responseCode = "404", description = "Solicitante não encontrado")
-    @ApiResponse(responseCode = "422", description = "Antecedência insuficiente, retorno antes da saída ou solicitante inativo")
+    @ApiResponse(responseCode = "422", description = "Antecedência insuficiente ou retorno antes da saída")
     ViagemResponse solicitar(@RequestBody(content = @Content(examples = @ExampleObject(value = """
-            {"solicitanteId": 2, "destino": "Natal", "finalidade": "Reunião na Reitoria",
+            {"destino": "Natal", "finalidade": "Reunião na Reitoria",
              "saida": "2030-01-10T07:00:00", "retornoPrevisto": "2030-01-10T18:00:00", "qtdPassageiros": 3}
-            """))) SolicitarViagemRequest request);
+            """))) SolicitarViagemRequest request,
+                             @Parameter(hidden = true) Usuario usuario);
 
     @Operation(summary = "Aprova uma viagem alocando veículo e motorista (RF06)",
             description = "Verifica capacidade (RN05), veículo disponível e sem conflito de período (RN06), "
@@ -77,7 +77,7 @@ public interface ViagemControllerDoc {
     @ApiResponse(responseCode = "409", description = "Veículo não está disponível")
     @ApiResponse(responseCode = "422", description = "Viagem não está APROVADA ou CNH inválida")
     ViagemResponse iniciar(@Parameter(description = "Id da viagem", example = "4") Long id,
-                   @Parameter(description = USUARIO, example = "4") Long usuarioId);
+                   @Parameter(hidden = true) Usuario usuario);
 
     @Operation(summary = "Conclui uma viagem em andamento (RF07)",
             description = "Só o motorista alocado (RN09). O km final deve ser maior que o inicial; "
@@ -86,7 +86,7 @@ public interface ViagemControllerDoc {
     @ApiResponse(responseCode = "403", description = "Usuário não é o motorista alocado")
     @ApiResponse(responseCode = "422", description = "Viagem não está EM_ANDAMENTO ou km final inválido")
     ViagemResponse concluir(@Parameter(description = "Id da viagem", example = "4") Long id,
-                    @Parameter(description = USUARIO, example = "4") Long usuarioId,
+                    @Parameter(hidden = true) Usuario usuario,
                     @RequestBody(content = @Content(examples = @ExampleObject(
                             value = "{\"kmFinal\": 35400}"))) ConcluirViagemRequest request);
 
@@ -98,7 +98,7 @@ public interface ViagemControllerDoc {
     @ApiResponse(responseCode = "404", description = "Viagem ou usuário não encontrados")
     @ApiResponse(responseCode = "422", description = "Viagem não pode mais ser cancelada ou motivo ausente")
     ViagemResponse cancelar(@Parameter(description = "Id da viagem", example = "1") Long id,
-                    @Parameter(description = USUARIO, example = "2") Long usuarioId,
+                    @Parameter(hidden = true) Usuario usuario,
                     @RequestBody(content = @Content(examples = @ExampleObject(
                             value = "{\"motivo\": \"Reunião adiada\"}"))) MotivoRequest request);
 }

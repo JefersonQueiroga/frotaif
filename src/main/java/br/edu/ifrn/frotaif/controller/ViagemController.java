@@ -6,10 +6,12 @@ import br.edu.ifrn.frotaif.dto.viagem.ConcluirViagemRequest;
 import br.edu.ifrn.frotaif.dto.viagem.MotivoRequest;
 import br.edu.ifrn.frotaif.dto.viagem.SolicitarViagemRequest;
 import br.edu.ifrn.frotaif.dto.viagem.ViagemResponse;
+import br.edu.ifrn.frotaif.model.Usuario;
 import br.edu.ifrn.frotaif.model.enums.StatusViagem;
 import br.edu.ifrn.frotaif.service.ViagemService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -39,10 +41,12 @@ public class ViagemController implements ViagemControllerDoc {
         return viagemService.buscarPorId(id);
     }
 
+    // O solicitante é o usuário logado: o cliente não escolhe mais em nome de quem pede
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ViagemResponse solicitar(@RequestBody @Valid SolicitarViagemRequest request) {
-        return viagemService.solicitar(request);
+    public ViagemResponse solicitar(@RequestBody @Valid SolicitarViagemRequest request,
+                                    @AuthenticationPrincipal Usuario usuario) {
+        return viagemService.solicitar(request, usuario.getId());
     }
 
     // Corpo: {"veiculoId": 1, "motoristaId": 1}
@@ -57,23 +61,24 @@ public class ViagemController implements ViagemControllerDoc {
         return viagemService.rejeitar(id, request);
     }
 
-    // X-Usuario-Id simula o usuário logado até a aula de Spring Security (t3)
+    // @AuthenticationPrincipal: o Usuario que o Spring Security autenticou (antes vinha do header X-Usuario-Id,
+    // que o próprio cliente preenchia)
     @PatchMapping("/{id}/iniciar")
-    public ViagemResponse iniciar(@PathVariable Long id, @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return viagemService.iniciar(id, usuarioId);
+    public ViagemResponse iniciar(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        return viagemService.iniciar(id, usuario.getId());
     }
 
     // Corpo: {"kmFinal": 35400}
     @PatchMapping("/{id}/concluir")
-    public ViagemResponse concluir(@PathVariable Long id, @RequestHeader("X-Usuario-Id") Long usuarioId,
+    public ViagemResponse concluir(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario,
                            @RequestBody ConcluirViagemRequest request) {
-        return viagemService.concluir(id, usuarioId, request);
+        return viagemService.concluir(id, usuario.getId(), request);
     }
 
     // Corpo: {"motivo": "..."}
     @PatchMapping("/{id}/cancelar")
-    public ViagemResponse cancelar(@PathVariable Long id, @RequestHeader("X-Usuario-Id") Long usuarioId,
+    public ViagemResponse cancelar(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario,
                            @RequestBody MotivoRequest request) {
-        return viagemService.cancelar(id, usuarioId, request);
+        return viagemService.cancelar(id, usuario.getId(), request);
     }
 }
